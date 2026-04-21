@@ -1,0 +1,19 @@
+# dataset - too large for GitHub
+data
+
+# model weights
+*.h5
+*.tflite
+saved_model/
+
+# python environment
+venv/
+__pycache__/
+*.pyc
+
+# secrets
+.env
+
+# editor files
+.vscode/
+.idea/
