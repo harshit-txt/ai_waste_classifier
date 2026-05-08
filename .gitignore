@@ -17,3 +17,5 @@ __pycache__/
 # editor files
 .vscode/
 .idea/
+
+waste_env/
