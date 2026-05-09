@@ -51,7 +51,7 @@ os.makedirs('saved_model', exist_ok=True)
 
 history = model.fit(
     train_data,               
-    epochs=1,                
+    epochs=15,                
     validation_data=val_data, 
     callbacks=[checkpoint, early_stop, reduce_lr]
 )
@@ -71,7 +71,7 @@ model.compile(
 
 history_fine = model.fit(
     train_data,
-    epochs=1,
+    epochs=20,
     validation_data=val_data,
     callbacks=[checkpoint, early_stop, reduce_lr]
 )

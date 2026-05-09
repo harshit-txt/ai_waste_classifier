@@ -36,10 +36,3 @@ augmentation = tf.keras.Sequential([
 
 
 train_data = train_data.map(lambda x,y: (augmentation (x, training = True) , y))
-
-
-# TEST — print shapes to confirm it's working
-for images, labels in train_data.take(1):
-    print("Image batch shape:", images.shape)
-    print("Label batch shape:", labels.shape)
-    print("Pixel range:", images.numpy().min(), "to", images.numpy().max())
