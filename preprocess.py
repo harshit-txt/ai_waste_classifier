@@ -36,3 +36,4 @@ augmentation = tf.keras.Sequential([
 
 
 train_data = train_data.map(lambda x,y: (augmentation (x, training = True) , y))
+
