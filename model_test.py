@@ -5,21 +5,45 @@ import numpy as np
 CLASS_NAMES = ["dry_waste", "e_waste", "sanitary_waste", "wet_waste"]
 IMAGE_SIZE  = (224, 224)
 
-# load model
+BIN_COLOURS = {
+    "dry_waste"     : (255, 0,   0  ),
+    "wet_waste"     : (0,   255, 0  ),
+    "e_waste"       : (0,   0,   255),
+    "sanitary_waste": (0,   165, 255)
+}
+
+BIN_NAMES = {
+    "dry_waste"     : "Blue Bin",
+    "wet_waste"     : "Green Bin",
+    "e_waste"       : "DO NOT BIN - E-Waste!",
+    "sanitary_waste": "Black Bin"
+}
+
 print("Loading model...")
 model = tf.keras.models.load_model('saved_model/best_model.h5')
 print("Model loaded! Opening camera...")
 
-# open camera
-cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0)
+
 while True:
-    # read frame from camera
     ret, frame = cap.read()
     if not ret:
         break
 
-    # preprocess frame for model
-    image = cv2.resize(frame, IMAGE_SIZE)
+    height, width = frame.shape[:2]
+
+    # calculate square position — centre of screen
+    square_size = 300
+    x1 = (width  // 2) - (square_size // 2)
+    y1 = (height // 2) - (square_size // 2)
+    x2 = x1 + square_size
+    y2 = y1 + square_size
+
+    # crop only the area inside the square
+    roi = frame[y1:y2, x1:x2]
+
+    # preprocess only the ROI
+    image = cv2.resize(roi, IMAGE_SIZE)
     image = image / 255.0
     image = np.expand_dims(image, axis=0)
 
@@ -28,29 +52,59 @@ while True:
     class_index = np.argmax(predictions[0])
     confidence  = float(predictions[0][class_index]) * 100
     class_name  = CLASS_NAMES[class_index]
+    colour      = BIN_COLOURS[class_name]
+    bin_name    = BIN_NAMES[class_name]
 
-    # choose colour based on class
-    colours = {
-        "dry_waste"     : (255, 0, 0),    # blue
-        "wet_waste"     : (0, 255, 0),    # green
-        "e_waste"       : (0, 0, 255),    # red
-        "sanitary_waste": (0, 165, 255)   # orange
-    }
-    colour = colours.get(class_name, (255, 255, 255))
+    # draw square on screen
+    # colour of square changes based on prediction
+    cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 3)
 
-    # draw prediction on screen
+    # small label above square
     cv2.putText(
-        frame,
-        f"{class_name} — {confidence:.1f}%",
-        (20, 40),
+        frame, "Place waste inside box",
+        (x1, y1 - 10),
         cv2.FONT_HERSHEY_SIMPLEX,
-        1, colour, 2
+        0.6, (255, 255, 255), 2
     )
 
-    # show the frame
+    # result panel at bottom
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (0, height - 100), (width, height), (0, 0, 0), -1)
+    cv2.addWeighted(overlay, 0.6, frame, 0.4, 0, frame)
+
+    # class name
+    cv2.putText(
+        frame, f"{class_name.replace('_', ' ').upper()}",
+        (20, height - 65),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8, colour, 2
+    )
+
+    # bin name
+    cv2.putText(
+        frame, f"Bin: {bin_name}",
+        (20, height - 38),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.65, (255, 255, 255), 2
+    )
+
+    # confidence bar background
+    cv2.rectangle(frame, (20, height - 20), (300, height - 8), (100, 100, 100), -1)
+
+    # confidence bar fill
+    bar_width = int((confidence / 100) * 280)
+    cv2.rectangle(frame, (20, height - 20), (20 + bar_width, height - 8), colour, -1)
+
+    # confidence percentage
+    cv2.putText(
+        frame, f"{confidence:.1f}%",
+        (310, height - 8),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5, (255, 255, 255), 1
+    )
+
     cv2.imshow("AI Waste Classifier", frame)
 
-    # press Q to quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
