@@ -32,7 +32,7 @@ def classify(image_path, lat=28.6139, lon=77.2090):
     bin_rule            = get_bin_rule(class_name)
 
     if class_name == "e_waste":
-        centre = find_nearest_ewaste_centre(lat, lon)
+        centre = find_nearest_e_waste_centre(lat, lon)
         return {
             "class"     : class_name,
             "confidence": f"{confidence:.1f}%",
@@ -50,8 +50,3 @@ def classify(image_path, lat=28.6139, lon=77.2090):
         "tip"       : bin_rule["tip"],
         "law"       : bin_rule["law"]
     }
-
-# TEST — remove after testing
-if __name__ == "__main__":
-    result = classify("data/test/dry_waste/cardboard_5.jpg")
-    print(result)
